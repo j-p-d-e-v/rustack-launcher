@@ -1,0 +1,26 @@
+[common]
+name = "Config Generator Development"
+description = "This is a config for dev"
+author = "JP"
+
+[[services]]
+name = "app"
+description = "This is the app service."
+image = "myimage:latest"
+ports = [
+    ""
+]
+volumes = [
+    "/host/app1:/var/app1",
+    "/host/app2:/var/app2",
+]
+environment_vars = [
+    { name="mykey", value="value" }
+]
+environment_files = [
+    "/env/test1.env",
+    "/env/test2.env",
+]
+repos = [
+    { url = "", name = "app" }
+]

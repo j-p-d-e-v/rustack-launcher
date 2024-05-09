@@ -1,0 +1,22 @@
+persons:
+- name: Juan
+  age: 13
+  friends:
+  - name: Jose
+    age: 14
+    friends:
+    - name: Jose
+      age: 14
+      friends: []
+    - name: Bruno
+      age: 15
+      friends: []
+  - name: Bruno
+    age: 15
+    friends:
+    - name: Jose
+      age: 14
+      friends: []
+    - name: Bruno
+      age: 15
+      friends: []
