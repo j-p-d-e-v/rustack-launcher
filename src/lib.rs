@@ -1,5 +1,9 @@
-use serde::{Deserialize, Serialize};
-use std::fs;
+use serde::{Deserialize};
+use serde_envfile::{Error};
+use std::fs::{read_to_string, File};
+use std::path::PathBuf;
+use std::collections::HashMap;
+use std::any::Any;
 
 #[derive(Deserialize, Debug, PartialEq)]
 struct EnvironmentVar {
@@ -21,24 +25,78 @@ struct Service {
     description: String,
     image: String,
     volumes: Vec<String>,
-    environment_vars: Vec<EnvironmentVar>,
-    environment_files: Vec<String>
+    env_vars: Vec<EnvironmentVar>,
+    env_files: Vec<String>
 }
 
 #[derive(Deserialize, Debug)]
 struct Config {
     common: Common,
     services: Vec<Service>,
+    env_files: Vec<EnvironmentFile>
+}
+
+#[derive(Deserialize, Debug)]
+struct EnvironmentFile {
+    name: String,
+    description: String,
+    values: Vec<EnvironmentVar>
+
 }
 
 impl Config {
     pub fn load(path: String) -> Self {
-        let data = fs::read_to_string(path).expect("Unable to load config.toml file.");
+        let data = read_to_string(path).expect("Unable to load config.toml file.");
         toml::from_str(data.as_str()).expect("Unable to parse toml file.")
     }
 
     pub fn to_compose_yaml(self) -> bool {
         todo!("Generate a docker-compose yaml file.")
+    }
+}
+
+impl EnvironmentFile {
+    fn write(env_file: EnvironmentFile ) -> Result<(),Error> {
+        let file_name: String  = format!(".{}.env",env_file.name);
+        let mut values: HashMap<String,String> = HashMap::new();
+        let file_path: PathBuf = PathBuf::from(file_name);
+
+        for item in env_file.values {
+            values.insert(item.name,item.value);
+        }
+
+        serde_envfile::to_file(&file_path,&values)?;
+        Ok(())
+    }
+}
+
+
+#[cfg(test)]
+mod test_envfile {
+    use crate::EnvironmentFile;
+    use crate::EnvironmentVar;
+
+    #[test]
+    fn test_write_env_file() {
+        let data = EnvironmentFile {
+            
+            name: String::from("test"),
+            description: String::from("This is a test env file."),
+            values: Vec::from([
+                EnvironmentVar {
+                    name: "MYVAR1".to_string(),
+                    value: "MyVAL1".to_string()
+                },
+                EnvironmentVar {
+                    name: "MYVAR2".to_string(),
+                    value: "MyVAL2".to_string()
+                }
+            ])
+        };
+        //Problem found is we need to implement Any to make sure it writes string for text values and int for numeric values
+        println!("{:#?}",data);
+        EnvironmentFile::write(data);
+
     }
 }
 
@@ -60,8 +118,8 @@ mod test_config{
             assert!(!service.description.is_empty());
             assert!(!service.image.is_empty());
             assert!(service.volumes.len() > 0);
-            assert!(service.environment_vars.len() > 0);
-            assert!(service.environment_files.len() > 0);
+            assert!(service.env_vars.len() > 0);
+            assert!(service.env_files.len() > 0);
             println!("service:{:#?}",service);
 
         }

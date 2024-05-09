@@ -14,13 +14,22 @@ volumes = [
     "/host/app1:/var/app1",
     "/host/app2:/var/app2",
 ]
-environment_vars = [
+env_vars = [
     { name="mykey", value="value" }
 ]
-environment_files = [
+env_files = [
     "/env/test1.env",
     "/env/test2.env",
 ]
 repos = [
     { url = "", name = "app" }
+]
+
+[[env_files]]
+name = "common"
+description = "Contains common environment variables."
+values = [
+    { name = "myvar1", value = "myvalue1" },
+    { name = "myvar2", value = "myvalue2" },
+    { name = "myvar3", value = "myvalue3" },
 ]
