@@ -4,8 +4,8 @@ description = "This is a config for dev"
 author = "JP"
 
 [[services]]
+#This is the app service.
 name = "app"
-description = "This is the app service."
 image = "myimage:latest"
 ports = [
     ""
@@ -26,10 +26,21 @@ repos = [
 ]
 
 [[env_files]]
+#Contains common environment variables
 name = "common"
-description = "Contains common environment variables."
 values = [
-    { name = "myvar1", value = "myvalue1" },
-    { name = "myvar2", value = "myvalue2" },
+    { name = "myvar1", value = "1" },
+    { name = "myvar2", value = "2" },
     { name = "myvar3", value = "myvalue3" },
+]
+
+
+[[env_files]]
+#Contains database environment variables.
+name = "database"
+values = [
+    { name = "DB_USERNAME", value = "root" },
+    { name = "DB_PASSWORD", value = "thisisasecretdbpassword" },
+    { name = "DB_HOST", value = "127.0.0.0" },
+    { name = "DB_PORT", value = "3306" },
 ]
