@@ -5,25 +5,42 @@ author = "JP"
 
 [[services]]
 #This is the app service.
-name = "app"
-image = "myimage:latest"
+hostname = "app"
+image = "ubuntu:latest"
 ports = [
-    ""
+    "8080:8080"
 ]
 volumes = [
     "/host/app1:/var/app1",
     "/host/app2:/var/app2",
 ]
-env_vars = [
-    { name="mykey", value="value" }
+environment = { mykey = "myvalue" }
+env_file = [
+    "common",
+    "database",
 ]
-env_files = [
-    "/env/test1.env",
-    "/env/test2.env",
+networks = ["mynetwork"]
+
+[[services]]
+#This is the app service.
+hostname = "mysql"
+image = "ubuntu:latest"
+ports = [
+    "3306:3306"
 ]
-repos = [
-    { url = "", name = "app" }
+volumes = [
+    "/db/data:/var/mysql/data",
 ]
+environment = { username = "dbuser", password = "dbpassword" }
+env_file = [
+    "database",
+]
+networks = []
+
+[[networks]]
+name = "mynetwork"
+driver = "bridge"
+external = false
 
 [[env_files]]
 #Contains common environment variables

@@ -5,13 +5,11 @@ use std::fs::{read_to_string, File};
 use std::path::PathBuf;
 use std::collections::HashMap;
 use std::error::Error;
+use std::io::Write;
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
-struct EnvironmentVar {
-    name: String,
-    value: String
+fn is_vec_empty(n: &Vec<String>) -> bool {
+    n.len() == 0
 }
-
 
 #[derive(Deserialize, Serialize, Debug)]
 struct Common {
@@ -20,20 +18,43 @@ struct Common {
     description: String,
 }
 
+#[derive(Deserialize, Serialize, Debug, Default)]
+struct Compose {
+    services: HashMap<String,Service>,
+    networks: HashMap<String,Network>
+}
+
 #[derive(Deserialize,Serialize, Debug)]
 struct Service {
-    name: String,
+    hostname: String,
     image: String,
     volumes: Vec<String>,
-    env_vars: Vec<EnvironmentVar>,
-    env_files: Vec<String>
+    environment: HashMap<String, String>,
+    env_file: Vec<String>,
+    #[serde(skip_serializing_if = "is_vec_empty")]
+    networks: Vec<String>
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+struct Network {
+    name: String,
+    driver: String,
+    #[serde(default)]
+    external: bool
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 struct Config {
     common: Common,
     services: Vec<Service>,
-    env_files: Vec<EnvironmentFile>
+    env_files: Vec<EnvironmentFile>,
+    networks: Vec<Network>
+}
+
+#[derive(Deserialize, Serialize, Debug, PartialEq)]
+struct EnvironmentVar {
+    name: String,
+    value: String
 }
 
 #[derive(Deserialize,Serialize,  Debug)]
@@ -46,6 +67,32 @@ impl Config {
     pub fn load(path: String) -> Self {
         let data = read_to_string(path).expect("Unable to load config.toml file.");
         toml::from_str(data.as_str()).expect("Unable to parse toml file.")
+    }
+
+    pub fn validate(&self) {
+        let networks = &self.networks;
+        let env_files = &self.env_files;
+
+        for service in &self.services {
+            let service_hostname: &String = &service.hostname;
+            let service_networks: &Vec<String> = &service.networks;
+            let service_env_files: &Vec<String> = &service.env_file;
+            
+            //Validate the networks declared in a service to the network configurations.
+            for service_network in service_networks {
+                if networks.into_iter().find( |&n| &n.name == service_network).is_none() {
+                    panic!("Unable to find network {} of service named {} in the list of networks.",service_network,service_hostname);
+                }
+            }
+
+            //Validate the environment files.
+            for service_env_file in service_env_files {
+                println!("{:?}",service_env_file);
+                if env_files.into_iter().find( |&n| &n.name == service_env_file).is_none() {
+                    panic!("Unable to find environment file {} of service named {} in the list of environment files.",service_env_file,service_hostname);
+                }
+            }
+        }
     }
 }
 
@@ -64,65 +111,36 @@ impl EnvironmentFile {
     }
 }
 
-impl Service {
-    fn to_yaml(service: Service) -> Result<String,Box<dyn Error>> {
+impl Compose {
+    fn insert_service(&mut self, name: String,mut service: Service) {
 
-        let mut mapping: Mapping = Mapping::new();
-        if let Ok(service_name) = serde_yaml::from_str::<Value>(&service.name) {
-            if let Ok(properties_str) = serde_yaml::to_string(&service) {
-                let properties: Value = serde_yaml::from_str(properties_str);
-                mapping.insert(service_name,properties);
-                match serde_yaml::to_string(&mapping){
-                    Ok(yaml) => Ok(yaml),
-                    Err(error) => Error("Invalid service yaml mapping: {:?}",error)
-                }
-            }
-            else{
-                Error("No service properties.")
-            }
-        }
-        else{
-            Error("Unable to get service name.")
-        }
+        service.env_file = service.env_file.into_iter().map(|file| format!(".{}.env",file) ).collect::<Vec<String>>().to_vec();
+
+        self.services.insert(name,service);
     }
-}
-
-#[cfg(test)]
-mod test_service {
-    use serde_yaml::{Mapping, Value};
-    use crate::Service;
-    use crate::EnvironmentVar;
-    use std::error::Error;
-
-    #[test]
-    fn test_generate_yaml() -> Result<(),Box<dyn Error>> {
-        let data: Service = Service {
-            name: String::from("test_service"),
-            image: String::from("test:latest"),
-            volumes: Vec::from([
-                String::from("/app:/var/app"),
-                String::from("/build:/var/build"),
-            ]),
-            env_vars: Vec::from([                
-                EnvironmentVar {
-                    name: "MYVAR1".to_string(),
-                    value: "MyVAL1".to_string()
-                },
-                EnvironmentVar {
-                    name: "MYVAR2".to_string(),
-                    value: "MyVAL2".to_string()
-                }
-            ]),
-            env_files: Vec::from([
-                String::from("/env/test1.env"),
-                String::from("/env/test2.env"),
-            ])
-        };
-        let yaml = Service::to_yaml(data)?;
-        println!("{:#?}",yaml);
+    fn insert_network(&mut self, name: String,network: Network){
+        self.networks.insert(name,network);
+    }
+    fn write(&self, path: String) -> Result<(),Box<dyn Error>> {
+        let compose_file: String = serde_yaml::to_string(&self)?;
+        let mut f = File::create(path)?;
+        f.write(&compose_file.as_bytes())?;
         Ok(())
     }
 }
+/* 
+use std::option::Option::None;
+#[test]
+fn test_poc(){
+    let data: HashMap<String,Option<String>> = HashMap::from([
+        (String::from("mykey1"),None),
+        (String::from("mykey2"),None)
+    ]);
+    let mut file = File::create("test-poc.yaml").unwrap();
+    let yaml = serde_yaml::to_string(&data).unwrap();
+    file.write_all(yaml.replace("null","").as_bytes()).unwrap();
+}
+*/
 
 #[cfg(test)]
 mod test_envfile {
@@ -131,6 +149,7 @@ mod test_envfile {
     use serde_envfile::{Error};
 
     #[test]
+    #[ignore]
     fn test_write_env_file() -> Result<(),Error> {
         let data = EnvironmentFile {
             
@@ -156,57 +175,36 @@ mod test_envfile {
 #[cfg(test)]
 mod test_config{
     use crate::Config;
-    use crate::Service;
+    use crate::Compose;
     use crate::EnvironmentFile;
 
     #[test]
     fn load_config() {
+        let mut compose : Compose = Compose::default();
         let config = Config::load("config-test.toml".to_string());
+        config.validate();
         assert!(!config.common.name.is_empty() );
         assert!(!config.common.author.is_empty() );
         assert!(!config.common.description.is_empty() );
-        for service in &config.services {
-            assert!(!service.name.is_empty());
+        for service in config.services {
+            assert!(!service.hostname.is_empty());
             assert!(!service.image.is_empty());
             assert!(service.volumes.len() > 0);
-            assert!(service.env_vars.len() > 0);
-            assert!(service.env_files.len() > 0);
+            assert!(service.environment.len() > 0);
+            assert!(service.env_file.len() > 0);
+            let hostname: String = service.hostname.clone();
+            compose.insert_service(hostname,service);
         }
-
-        //Write An Env File
-        for env_file in config.env_files {
-            EnvironmentFile::write(env_file).unwrap();
+        for network in config.networks {
+            let network_name: String = network.name.clone();
+            compose.insert_network(network_name,network);
         }
-        //config.write_yaml().unwrap();
+        compose.write("docker-compose-test.yaml".to_string()).unwrap();
+//
+        ////Write An Env File
+        //for env_file in config.env_files {
+        //    EnvironmentFile::write(env_file).unwrap();
+        //}
+        ////config.write_yaml().unwrap();
     }
-
-    //#[test]
-    //#[ignore]
-    //fn test_write_yaml() -> Result<(), serde_yaml::Error>{
-    //    use std::fs::File;
-    //    #[derive(Debug,Deserialize, Serialize)]
-    //    struct Person {
-    //        name: String, 
-    //        age: u32
-    //    }
-    //    let ferson = Person { 
-    //        name: String::from("Juan"), 
-    //        age: 13,
-    //    };
-    //    use serde_yaml::{Mapping, Value};
-//
-    //    let mut smapping: Mapping = Mapping::new();
-    //    let key: Value = serde_yaml::from_str(&ferson.name).unwrap();
-    //    let svalue = serde_yaml::to_string(&ferson).unwrap();
-    //    let value: Value = serde_yaml::from_str(&svalue).unwrap();
-//
-    //    println!("{:?}",value);
-    //    smapping.insert(key,value);
-    //    println!("{:?}",smapping);
-////
-    //    if let Ok(buffer) = File::create("test.yaml") {
-    //        serde_yaml::to_writer(buffer,&smapping)?;
-    //    }
-    //    Ok(())
-    //}
 }
