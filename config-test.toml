@@ -4,7 +4,6 @@ description = "This is a config for dev"
 author = "JP"
 deploy_dir = "deploy"
 
-
 [[services]]
 #This is the app service.
 hostname = "app"
