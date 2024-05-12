@@ -2,6 +2,8 @@
 name = "Config Generator Development"
 description = "This is a config for dev"
 author = "JP"
+deploy_dir = "deploy"
+
 
 [[services]]
 #This is the app service.
@@ -10,10 +12,7 @@ image = "ubuntu:latest"
 ports = [
     "8080:8080"
 ]
-volumes = [
-    "/host/app1:/var/app1",
-    "/host/app2:/var/app2",
-]
+volumes = []
 environment = { mykey = "myvalue" }
 env_file = [
     "common",
@@ -23,24 +22,31 @@ networks = ["mynetwork"]
 
 [[services]]
 #This is the app service.
-hostname = "mysql"
-image = "ubuntu:latest"
+hostname = "database"
+image = "mysql:latest"
 ports = [
     "3306:3306"
-]
-volumes = [
-    "/db/data:/var/mysql/data",
 ]
 environment = { username = "dbuser", password = "dbpassword" }
 env_file = [
     "database",
 ]
 networks = []
+volumes = [
+    { kind = "volume", source = "/var/host/db", target = "/var/mysql/data"},
+    { kind = "volume", source = "/var/host/db2", target = "/var/mysql/data"}
+]
 
 [[networks]]
 name = "mynetwork"
 driver = "bridge"
 external = false
+labels = { "my.network.label.1" = "This is a network label 1.", "my.network.label.2" = "This is a network label 2." }
+
+[[networks]]
+name = "mynetwork2"
+driver = "bridge"
+labels = { "my.network.label.1" = "This is a network label 1.", "my.network.label.2" = "This is a network label 2." }
 
 [[env_files]]
 #Contains common environment variables
@@ -57,7 +63,22 @@ values = [
 name = "database"
 values = [
     { name = "DB_USERNAME", value = "root" },
-    { name = "DB_PASSWORD", value = "thisisasecretdbpassword" },
+    { name = "DB_PASSWORD", value = "thispasswordmodified" },
     { name = "DB_HOST", value = "127.0.0.0" },
     { name = "DB_PORT", value = "3306" },
 ]
+
+[[volumes]]
+name = "testvolumes"
+driver = "nfs"
+driver_opts = [
+    { name = "type", value = "nfs" },
+    { name = "o", value = "addr=10.40.0.199,nolock,soft,rw" },
+    { name = "device", value = ":/docker/example" },
+]
+external = false
+labels = { "my.volume.label1" = "This is a volume label 1.", "my.volume.label2" = "This is a volume label 2." }
+
+[[volumes]]
+name = "testvolumesno"
+external = false
