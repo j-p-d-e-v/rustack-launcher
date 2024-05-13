@@ -1,6 +1,7 @@
 use crate::generators::prelude::*;
 
 #[derive(Deserialize, Serialize, Debug)]
+///The struct for the config-*.toml file.
 pub struct Config {
     pub settings: Settings,
     pub services: Vec<Service>,
