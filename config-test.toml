@@ -101,3 +101,9 @@ name = "rust-series"
 url = "https://github.com/j-p-d-e-v/exercism-series"
 branch = "test"
 clone = true
+
+[[repositories]]
+name = "sample-sdk"
+url = "https://github.com/j-p-d-e-v/exercism-nth-prime"
+branch = "master"
+clone = true

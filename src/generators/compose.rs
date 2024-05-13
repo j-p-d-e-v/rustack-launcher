@@ -73,17 +73,27 @@ impl ServiceVolume {
 impl Compose {
     pub fn generate(services: &mut Vec<Service>, networks: &Vec<Network>, volumes: &Vec<Volume>, repositories: &Vec<Repository>,  file_name: String, deploy_dir: &String, services_dir: &String) -> String {
         let mut compose = Self::default();
+        let mut services_repo_volumes: Vec<(String,ServiceVolume)> = Vec::new();
         
-        for service in services {
-            for repo in repositories.into_iter() {
-                if repo.clone && repo.service == service.hostname {
-                    let mount_source: String = Repository::git_clone(&repo.name,&repo.url,&repo.branch,services_dir);
-                    service.volumes.push(
-                        ServiceVolume::new(String::from("volume"),mount_source,repo.mount_target.clone(),false)
+        for repo in repositories.into_iter() {
+            if repo.clone {
+                let mount_source: String = Repository::git_clone(&repo.name,&repo.url,&repo.branch,services_dir);
+                let service_name: String = repo.service.clone();
+                if !service_name.is_empty() {
+                    services_repo_volumes.push(
+                        (service_name,ServiceVolume::new(String::from("volume"),mount_source,repo.mount_target.clone(),false))
                     );
                 }
             }
-            compose.insert_service(service.hostname.clone(),service.clone());
+        }
+        for service in services {
+            let hostname = service.hostname.clone();
+            for item in &services_repo_volumes {
+                if item.0 ==  hostname {
+                    service.volumes.push(item.1.clone());
+                }
+            }
+            compose.insert_service(hostname,service.clone());
         }
         for network in networks {
             let network_name: String = network.name.clone();

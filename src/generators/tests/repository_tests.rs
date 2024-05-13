@@ -1,6 +1,5 @@
 use crate::generators::prelude::{Repository};
 
-
 #[test]
 pub fn test_repository_clone(){
 
@@ -16,6 +15,5 @@ pub fn test_repository_clone(){
     ]);
     for item in &data {
         assert_eq!(!Repository::git_clone(&item.name,&item.url,&item.branch,&String::from("services")).len() > 0,true);
-
     }
 }

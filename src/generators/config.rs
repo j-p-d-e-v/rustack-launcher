@@ -1,7 +1,7 @@
 use crate::generators::prelude::*;
 
 #[derive(Deserialize, Serialize, Debug)]
-///The struct for the config-*.toml file.
+///The struct for the configuration(toml) file.
 pub struct Config {
     pub settings: Settings,
     pub services: Vec<Service>,
@@ -14,6 +14,19 @@ pub struct Config {
 }
 
 impl Config {
+    /// loads the TOML file
+    /// # Example
+    /// ```ignore
+    /// let mut config = Config::load("config-test.toml".to_string());
+    /// let deploy_dir: String = format!("{}/{}",config.settings.base_dir,&config.settings.deploy_dir);
+    /// let services_dir: String = format!("{}/{}",config.settings.base_dir,&config.settings.services_dir);
+    /// let compose_file: String = String::from("docker-compose-test.yaml");
+    /// config.validate();
+    /// let env_file_paths: Vec<String> = EnvironmentFile::generate(&config.env_files,&deploy_dir);
+    /// assert_eq!(env_file_paths.len()>0,true);
+    /// let compose_file_path : String = Compose::generate(&mut config.services,&config.networks,&config.volumes,&config.repositories, compose_file,&deploy_dir,&services_dir);
+    /// assert_eq!(!compose_file_path.is_empty(),true);
+    /// ```
     pub fn load(config_path: String) -> Self {
         let data = read_to_string(config_path).expect("Unable to load config.toml file.");
         match toml::from_str::<Config>(data.as_str()) {
@@ -45,6 +58,9 @@ impl Config {
         }
     }
 
+    ///Validates the configuration file such as:
+    /// - if a service uses a network it must be declared in the list of networks.
+    /// - if a service uses a environment file, it must be declared in the list of environment files
     pub fn validate(&self) {
         let networks = &self.networks;
         let env_files = &self.env_files;

@@ -44,17 +44,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "config-generator"
-version = "0.1.0"
-dependencies = [
- "git2",
- "serde",
- "serde-envfile",
- "serde_yaml",
- "toml",
-]
-
-[[package]]
 name = "dotenvy"
 version = "0.15.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -255,6 +244,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fa76aaf39101c457836aec0ce2316dbdc3ab723cdda1c6bd4e6ad4208acaca7"
 dependencies = [
  "proc-macro2",
+]
+
+[[package]]
+name = "rustack-launcher"
+version = "0.1.0"
+dependencies = [
+ "git2",
+ "serde",
+ "serde-envfile",
+ "serde_yaml",
+ "toml",
 ]
 
 [[package]]
