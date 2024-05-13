@@ -1,8 +1,10 @@
-[common]
-name = "Config Generator Development"
-description = "This is a config for dev"
+[settings]
+name = "ruStack Launcher"
+description = "An application launcher that you might probably use."
 author = "JP"
+base_dir = "."
 deploy_dir = "deploy"
+services_dir = "services"
 
 [[services]]
 #This is the app service.
@@ -81,3 +83,21 @@ labels = { "my.volume.label1" = "This is a volume label 1.", "my.volume.label2" 
 [[volumes]]
 name = "testvolumesno"
 external = false
+
+
+[[repositories]]
+service = "app"
+mount_target = "/var/db"
+name = "execism-diffie-hellman"
+url = "https://github.com/j-p-d-e-v/execism-diffie-hellman"
+branch = "master"
+clone = true
+
+
+[[repositories]]
+service = "database"
+mount_target = "/var/db"
+name = "rust-series"
+url = "https://github.com/j-p-d-e-v/exercism-series"
+branch = "test"
+clone = true

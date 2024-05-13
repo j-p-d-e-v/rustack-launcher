@@ -6,10 +6,11 @@ pub use std::path::{ PathBuf, Path };
 pub use std::collections::HashMap;
 pub use std::error::Error;
 pub use std::io::Write;
-pub use crate::generators::common::{ Common };
+pub use crate::generators::settings::{ Settings };
 pub use crate::generators::env::{ EnvironmentFile, EnvironmentVar };
 pub use crate::generators::compose::{ Compose, ServiceVolume, Service, Volume, Network };
 pub use crate::generators::config::{ Config };
+pub use crate::generators::repository::{ Repository };
 
 pub fn is_vec_empty(n: &Vec<String>) -> bool {
     n.len() == 0

@@ -9,7 +9,7 @@ pub struct Compose {
     pub volumes: HashMap<String,Volume>
 }
 
-#[derive(Deserialize,Serialize, Debug)]
+#[derive(Deserialize,Serialize, Debug, Clone)]
 pub struct ServiceVolume {  
     #[serde(rename(deserialize = "kind",serialize = "type"))]
     pub kind: String,
@@ -19,7 +19,7 @@ pub struct ServiceVolume {
     pub read_only: bool
 }
 
-#[derive(Deserialize,Serialize, Debug)]
+#[derive(Deserialize,Serialize, Debug, Clone)]
 pub struct Service {
     pub hostname: String,
     pub image: String,
@@ -30,10 +30,10 @@ pub struct Service {
     pub networks: Vec<String>,
     #[serde(default)]
     #[serde(skip_serializing_if = "is_service_volumes_empty")]
-    pub volumes: Vec<ServiceVolume>
+    pub volumes: Vec<ServiceVolume>,
 }
 
-#[derive(Deserialize, Serialize, Debug )]
+#[derive(Deserialize, Serialize, Debug , Clone)]
 pub struct Network {
     pub  name: String,
     #[serde(default)]
@@ -46,7 +46,7 @@ pub struct Network {
     pub labels: HashMap<String, String>
 }
 
-#[derive(Deserialize, Serialize, Debug, Default)]
+#[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct Volume {
     pub name: String,
     #[serde(default)]
@@ -59,21 +59,39 @@ pub struct Volume {
     pub labels: HashMap<String, String>
 }
 
+impl ServiceVolume {
+    pub fn new(kind: String, source: String, target: String, read_only: bool) -> Self{
+        Self {
+            kind: kind,
+            source: source,
+            target: target,
+            read_only: read_only
+        }
+    }
+}
 
 impl Compose {
-    pub fn generate(config: Config,  file_name: String, deploy_dir: &String) -> String {
+    pub fn generate(services: &mut Vec<Service>, networks: &Vec<Network>, volumes: &Vec<Volume>, repositories: &Vec<Repository>,  file_name: String, deploy_dir: &String, services_dir: &String) -> String {
         let mut compose = Self::default();
-        for service in config.services {
-            let hostname: String = service.hostname.clone();
-            compose.insert_service(hostname,service);
+        
+        for service in services {
+            for repo in repositories.into_iter() {
+                if repo.clone && repo.service == service.hostname {
+                    let mount_source: String = Repository::git_clone(&repo.name,&repo.url,&repo.branch,services_dir);
+                    service.volumes.push(
+                        ServiceVolume::new(String::from("volume"),mount_source,repo.mount_target.clone(),false)
+                    );
+                }
+            }
+            compose.insert_service(service.hostname.clone(),service.clone());
         }
-        for network in config.networks {
+        for network in networks {
             let network_name: String = network.name.clone();
-            compose.insert_network(network_name,network);
+            compose.insert_network(network_name,network.clone());
         }
-        for volume in config.volumes {
+        for volume in volumes {
             let volume_name: String = volume.name.clone();
-            compose.insert_volume(volume_name,volume);
+            compose.insert_volume(volume_name,volume.clone());
         }
         match Compose::write(compose,file_name, &deploy_dir) {
             Ok(file_path) => {
