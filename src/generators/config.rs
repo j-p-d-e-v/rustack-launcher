@@ -6,7 +6,9 @@ pub struct Config {
     pub settings: Settings,
     pub services: Vec<Service>,
     pub env_files: Vec<EnvironmentFile>,
+    #[serde(default)]
     pub networks: Vec<Network>,
+    #[serde(default)]
     pub volumes: Vec<Volume>,
     #[serde(default)]
     pub repositories: Vec<Repository>

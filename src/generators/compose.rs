@@ -1,6 +1,6 @@
 use crate::generators::prelude::*;
-use std::process::Command;
-use std::process::Child;
+use std::process::{ Command, Stdio, Child };
+use std::io::{ BufRead, BufReader };
 
 /// The root struct of the compose file.
 #[derive(Deserialize, Serialize, Debug, Default)]
@@ -28,6 +28,8 @@ pub struct ServiceVolume {
 pub struct Service {
     pub hostname: String,
     pub image: String,
+    #[serde(default)]
+    pub ports: Vec<String>,
     #[serde(default)]
     pub tty: bool,
     pub environment: HashMap<String, String>,
@@ -157,10 +159,21 @@ impl Compose {
         f.write(&compose_file.as_bytes())?;
         Ok(file_path)
     }
-    pub fn execute(exec: String,args: Vec<String>) -> Child {
-        match Command::new(&exec).args(args).spawn() {
-            Ok(child) => {
-                child
+    pub fn execute(exec: String,args: Vec<String>) {
+        match Command::new(&exec).args(args).stdout(Stdio::piped()).spawn() {
+            Ok(mut child) => {
+                if let Some(stdout) = child.stdout.take() {
+                    let lines = BufReader::new(stdout).lines();  
+                    for line in lines {
+                        match line {
+                            Ok(output) => println!("{}",output),
+                            Err(error) => panic!("{}",error)
+                        }
+                    }
+                }
+                else {
+                    println!("No output.");
+                }
             }
             Err(error) => {
                 panic!("Unable to execute {}. Error: {:?}",&exec,error);

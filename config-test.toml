@@ -2,39 +2,43 @@
 name = "ruStack Launcher"
 description = "An application launcher that you might probably use."
 author = "JP"
-base_dir = "."
+base_dir = "<YOURBASEPATH>"
 deploy_dir = "deploy"
 services_dir = "services"
 
 [[services]]
 #This is the app service.
 hostname = "app"
-image = "ubuntu:latest"
+image = "django-runner:test"
 ports = [
-    "8080:8080"
+    "7080:8080"
 ]
-volumes = []
+volumes = [
+    { kind = "bind", source = "<YOURAPP>", target = "/app"}
+]
 environment = { mykey = "myvalue" }
 env_file = [
     "common",
     "database",
 ]
-networks = ["mynetwork"]
+networks = []
 tty = true
 
 [[services]]
 #This is the app service.
 hostname = "database"
-image = "ubuntu:latest"
+image = "django-runner:test"
 ports = [
-    "3306:3306"
+    "7090:8080"
 ]
 environment = { username = "dbuser", password = "dbpassword" }
 env_file = [
     "database",
 ]
 networks = []
-volumes = []
+volumes = [
+    { kind = "bind", source = "<YOURAPP>", target = "/app"}
+]
 tty = true
 
 [[networks]]
@@ -56,7 +60,6 @@ values = [
     { name = "myvar2", value = "2" },
     { name = "myvar3", value = "myvalue3" },
 ]
-
 
 [[env_files]]
 #Contains database environment variables.
