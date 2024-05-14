@@ -2,7 +2,7 @@
 name = "ruStack Launcher"
 description = "An application launcher that you might probably use."
 author = "JP"
-base_dir = "/Users/johmateo/Workspace/Active/rust/rustack-launcher"
+base_dir = "."
 deploy_dir = "deploy"
 services_dir = "services"
 
