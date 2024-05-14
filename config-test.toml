@@ -2,7 +2,7 @@
 name = "ruStack Launcher"
 description = "An application launcher that you might probably use."
 author = "JP"
-base_dir = "."
+base_dir = "/Users/johmateo/Workspace/Active/rust/rustack-launcher"
 deploy_dir = "deploy"
 services_dir = "services"
 
@@ -20,11 +20,12 @@ env_file = [
     "database",
 ]
 networks = ["mynetwork"]
+tty = true
 
 [[services]]
 #This is the app service.
 hostname = "database"
-image = "mysql:latest"
+image = "ubuntu:latest"
 ports = [
     "3306:3306"
 ]
@@ -33,10 +34,8 @@ env_file = [
     "database",
 ]
 networks = []
-volumes = [
-    { kind = "volume", source = "/var/host/db", target = "/var/mysql/data"},
-    { kind = "volume", source = "/var/host/db2", target = "/var/mysql/data"}
-]
+volumes = []
+tty = true
 
 [[networks]]
 name = "mynetwork"

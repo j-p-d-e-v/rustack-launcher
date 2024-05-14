@@ -1,5 +1,8 @@
 use crate::generators::prelude::*;
+use std::process::Command;
+use std::process::Child;
 
+/// The root struct of the compose file.
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub struct Compose {
     pub services: HashMap<String,Service>,
@@ -9,6 +12,7 @@ pub struct Compose {
     pub volumes: HashMap<String,Volume>
 }
 
+///Struct for volume under service.
 #[derive(Deserialize,Serialize, Debug, Clone)]
 pub struct ServiceVolume {  
     #[serde(rename(deserialize = "kind",serialize = "type"))]
@@ -19,10 +23,13 @@ pub struct ServiceVolume {
     pub read_only: bool
 }
 
+///Struct for service
 #[derive(Deserialize,Serialize, Debug, Clone)]
 pub struct Service {
     pub hostname: String,
     pub image: String,
+    #[serde(default)]
+    pub tty: bool,
     pub environment: HashMap<String, String>,
     pub env_file: Vec<String>,
     #[serde(default)]
@@ -33,6 +40,7 @@ pub struct Service {
     pub volumes: Vec<ServiceVolume>,
 }
 
+/// Struct for networks
 #[derive(Deserialize, Serialize, Debug , Clone)]
 pub struct Network {
     pub  name: String,
@@ -46,6 +54,7 @@ pub struct Network {
     pub labels: HashMap<String, String>
 }
 
+///Struct for volumes
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct Volume {
     pub name: String,
@@ -60,6 +69,7 @@ pub struct Volume {
 }
 
 impl ServiceVolume {
+    /// Create a service volume instance.
     pub fn new(kind: String, source: String, target: String, read_only: bool) -> Self{
         Self {
             kind: kind,
@@ -71,6 +81,24 @@ impl ServiceVolume {
 }
 
 impl Compose {
+    ///
+    ///Generate a compose file
+    ///
+    /// ```ignore
+    /// use crate::generators::env::{ EnvironmentFile };
+    /// use crate::generators::compose::{ Compose};
+    /// use crate::generators::config::{ Config };
+    ///
+    /// let mut config = Config::load("config-test.toml".to_string());
+    /// let deploy_dir: String = format!("{}/{}",config.settings.base_dir,&config.settings.deploy_dir);
+    /// let services_dir: String = format!("{}/{}",config.settings.base_dir,&config.settings.services_dir);
+    /// let compose_file: String = String::from("docker-compose-test.yaml");
+    /// config.validate();
+    /// let env_file_paths: Vec<String> = EnvironmentFile::generate(&config.env_files,&deploy_dir);
+    /// assert_eq!(env_file_paths.len()>0,true);
+    /// let compose_file_path : String = Compose::generate(&mut config.services,&config.networks,&config.volumes,&config.repositories, compose_file,&deploy_dir,&services_dir);
+    /// assert_eq!(!compose_file_path.is_empty(),true);
+    /// ```
     pub fn generate(services: &mut Vec<Service>, networks: &Vec<Network>, volumes: &Vec<Volume>, repositories: &Vec<Repository>,  file_name: String, deploy_dir: &String, services_dir: &String) -> String {
         let mut compose = Self::default();
         let mut services_repo_volumes: Vec<(String,ServiceVolume)> = Vec::new();
@@ -81,7 +109,7 @@ impl Compose {
                 let service_name: String = repo.service.clone();
                 if !service_name.is_empty() {
                     services_repo_volumes.push(
-                        (service_name,ServiceVolume::new(String::from("volume"),mount_source,repo.mount_target.clone(),false))
+                        (service_name,ServiceVolume::new(String::from("bind"),mount_source,repo.mount_target.clone(),false))
                     );
                 }
             }
@@ -128,5 +156,15 @@ impl Compose {
         let mut f = File::create(file_path.clone())?;
         f.write(&compose_file.as_bytes())?;
         Ok(file_path)
+    }
+    pub fn execute(exec: String,args: Vec<String>) -> Child {
+        match Command::new(&exec).args(args).spawn() {
+            Ok(child) => {
+                child
+            }
+            Err(error) => {
+                panic!("Unable to execute {}. Error: {:?}",&exec,error);
+            }
+        }
     }
 }

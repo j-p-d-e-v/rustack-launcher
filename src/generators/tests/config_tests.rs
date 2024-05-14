@@ -13,4 +13,9 @@ fn load_config() {
     assert_eq!(env_file_paths.len()>0,true);
     let compose_file_path : String = Compose::generate(&mut config.services,&config.networks,&config.volumes,&config.repositories, compose_file,&deploy_dir,&services_dir);
     assert_eq!(!compose_file_path.is_empty(),true);
+    println!("{:#?}",Compose::execute("docker-compose".to_string(),vec![
+        String::from("-f"),
+        compose_file_path,
+        String::from("up")
+    ]));
 }
