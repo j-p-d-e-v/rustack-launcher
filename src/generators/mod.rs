@@ -5,3 +5,4 @@ pub mod repository;
 pub mod config;
 pub mod compose;
 pub mod tests;
+pub mod execute_command;

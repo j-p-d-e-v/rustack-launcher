@@ -15,4 +15,10 @@ pub struct Settings {
     pub deploy_dir: String,
     ///The directory where all the git repositories will be cloned.
     pub services_dir: String,
+    ///The executable file for executing the compose file example: docker-compose or podmad
+    pub compose_executable: String,
+    ///The target compose yaml file
+    pub compose_file: String,
+    ///Execute the compose file in detached mode.
+    pub compose_detached: bool
 }

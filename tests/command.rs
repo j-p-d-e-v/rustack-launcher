@@ -1,6 +1,6 @@
 
 use std::process::{Command, Stdio};
-use std::io::{ BufRead, BufReader, Error, ErrorKind };
+use std::io::{ BufRead, BufReader };
 #[warn(unused_imports)]
 fn main() {
     let mut child = Command::new("ping")

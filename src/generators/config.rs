@@ -11,8 +11,7 @@ pub struct Config {
     #[serde(default)]
     pub volumes: Vec<Volume>,
     #[serde(default)]
-    pub repositories: Vec<Repository>
-
+    pub repositories: Vec<Repository>,
 }
 
 impl Config {

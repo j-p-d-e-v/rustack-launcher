@@ -1,15 +1,20 @@
 use crate::generators::prelude::*;
-use std::process::{ Command, Stdio, Child };
-use std::io::{ BufRead, BufReader };
 
 /// The root struct of the compose file.
-#[derive(Deserialize, Serialize, Debug, Default)]
+#[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct Compose {
     pub services: HashMap<String,Service>,
     #[serde(skip_serializing_if = "is_compose_networks_empty")]
     pub networks: HashMap<String,Network>,
     #[serde(skip_serializing_if = "is_compose_volumes_empty")]
-    pub volumes: HashMap<String,Volume>
+    pub volumes: HashMap<String,Volume>,
+    #[serde(default)]
+    #[serde(skip)]
+    pub executable: String,
+    #[serde(skip)]
+    pub file: String,
+    #[serde(skip)]
+    pub detached: bool,
 }
 
 ///Struct for volume under service.
@@ -101,7 +106,24 @@ impl Compose {
     /// let compose_file_path : String = Compose::generate(&mut config.services,&config.networks,&config.volumes,&config.repositories, compose_file,&deploy_dir,&services_dir);
     /// assert_eq!(!compose_file_path.is_empty(),true);
     /// ```
-    pub fn generate(services: &mut Vec<Service>, networks: &Vec<Network>, volumes: &Vec<Volume>, repositories: &Vec<Repository>,  file_name: String, deploy_dir: &String, services_dir: &String) -> String {
+    pub fn new(mut config: Config) -> Self {
+        let deploy_dir: String = format!("{}/{}",config.settings.base_dir,&config.settings.deploy_dir);
+        let services_dir: String = format!("{}/{}",config.settings.base_dir,&config.settings.services_dir);
+        Self { 
+            executable: config.settings.compose_executable.clone(), 
+            detached: config.settings.compose_detached, 
+            ..Self::generate(
+                &mut config.services,
+                &config.networks,
+                &config.volumes,
+                &config.repositories, 
+                config.settings.compose_file,
+                &deploy_dir,
+                &services_dir
+            )
+        }
+    }
+    pub fn generate(services: &mut Vec<Service>, networks: &Vec<Network>, volumes: &Vec<Volume>, repositories: &Vec<Repository>,  file_name: String, deploy_dir: &String, services_dir: &String) -> Self {
         let mut compose = Self::default();
         let mut services_repo_volumes: Vec<(String,ServiceVolume)> = Vec::new();
         
@@ -133,9 +155,9 @@ impl Compose {
             let volume_name: String = volume.name.clone();
             compose.insert_volume(volume_name,volume.clone());
         }
-        match Compose::write(compose,file_name, &deploy_dir) {
+        match Compose::write(compose.clone(),file_name, &deploy_dir) {
             Ok(file_path) => {
-                file_path
+                Compose { file: file_path.clone(), ..compose }
             }
             Err(error) => {
                 panic!("Unable to generate compose file: {:?}.",error);
@@ -149,9 +171,11 @@ impl Compose {
     pub fn insert_network(&mut self, name: String,data: Network){
         self.networks.insert(name,data);
     }
+
     pub fn insert_volume(&mut self, name: String,data: Volume){
         self.volumes.insert(name,data);
     }
+    ///Write the compose file.
     pub fn write(compose: Compose, file_name: String, deploy_dir: &String) -> Result<String,Box<dyn Error>> {
         let compose_file: String = serde_yaml::to_string(&compose)?;
         let file_path = format!("{}/{}",deploy_dir,file_name);
@@ -159,25 +183,28 @@ impl Compose {
         f.write(&compose_file.as_bytes())?;
         Ok(file_path)
     }
-    pub fn execute(exec: String,args: Vec<String>) {
-        match Command::new(&exec).args(args).stdout(Stdio::piped()).spawn() {
-            Ok(mut child) => {
-                if let Some(stdout) = child.stdout.take() {
-                    let lines = BufReader::new(stdout).lines();  
-                    for line in lines {
-                        match line {
-                            Ok(output) => println!("{}",output),
-                            Err(error) => panic!("{}",error)
-                        }
-                    }
-                }
-                else {
-                    println!("No output.");
-                }
-            }
-            Err(error) => {
-                panic!("Unable to execute {}. Error: {:?}",&exec,error);
-            }
+
+    ///Execute the compose file.
+    pub fn up(&self) -> bool {
+        let mut args: Vec<String> = Vec::from([
+            String::from("-f"),
+            self.file.clone(),
+            String::from("up")
+        ]);
+        if self.detached {
+            args.push(String::from("-d"));
         }
+        ExecuteCommand::run(self.executable.clone(),args);
+        true
+    }
+    ///Terminates the running compose file.
+    pub fn down(&self) -> bool {
+        let args: Vec<String> = Vec::from([
+            String::from("-f"),
+            self.file.clone(),
+            String::from("down")
+        ]);
+        ExecuteCommand::run(self.executable.clone(),args);
+        true
     }
 }

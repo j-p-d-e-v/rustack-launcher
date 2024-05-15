@@ -2,19 +2,22 @@
 name = "ruStack Launcher"
 description = "An application launcher that you might probably use."
 author = "JP"
-base_dir = "<YOURBASEPATH>"
+base_dir = "."
 deploy_dir = "deploy"
 services_dir = "services"
+compose_executable = "docker-compose"
+compose_file = "docker-compose-test.yaml"
+compose_detached = true
 
 [[services]]
 #This is the app service.
-hostname = "app"
-image = "django-runner:test"
+hostname = "phpmyadmin"
+image = "phpmyadmin:latest"
 ports = [
     "7080:8080"
 ]
 volumes = [
-    { kind = "bind", source = "<YOURAPP>", target = "/app"}
+    #{ kind = "bind", source = "<YOURAPP>", target = "/app"}
 ]
 environment = { mykey = "myvalue" }
 env_file = [
@@ -26,8 +29,8 @@ tty = true
 
 [[services]]
 #This is the app service.
-hostname = "database"
-image = "django-runner:test"
+hostname = "app"
+image = "ubuntu:latest"
 ports = [
     "7090:8080"
 ]
@@ -37,7 +40,7 @@ env_file = [
 ]
 networks = []
 volumes = [
-    { kind = "bind", source = "<YOURAPP>", target = "/app"}
+    #{ kind = "bind", source = "<YOURAPP>", target = "/app"}
 ]
 tty = true
 

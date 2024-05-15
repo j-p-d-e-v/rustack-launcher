@@ -11,6 +11,7 @@ pub use crate::generators::env::{ EnvironmentFile, EnvironmentVar };
 pub use crate::generators::compose::{ Compose, ServiceVolume, Service, Volume, Network };
 pub use crate::generators::config::{ Config };
 pub use crate::generators::repository::{ Repository };
+pub use crate::generators::execute_command::{ ExecuteCommand };
 
 ///Check if a Vector of String is empty.
 ///Used for #[serde(skip_serializing_if="is_vec_empty")] 
