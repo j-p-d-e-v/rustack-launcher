@@ -11,10 +11,11 @@ compose_detached = true
 
 [[services]]
 #This is the app service.
-hostname = "phpmyadmin"
-image = "phpmyadmin:latest"
+hostname = "app"
+image = "django:test"
 ports = [
-    "7080:8080"
+    "7080:8000",
+    "7081:80"
 ]
 volumes = [
     #{ kind = "bind", source = "<YOURAPP>", target = "/app"}
@@ -24,23 +25,36 @@ env_file = [
     "common",
     "database",
 ]
+depends_on = ["db"]
+networks = []
+tty = true
+
+
+[[services]]
+#This is the app service.
+hostname = "adminer"
+image = "adminer"
+environment = {}
+env_file = []
+ports = [
+    "7082:8080"
+]
+depends_on = ["db"]
 networks = []
 tty = true
 
 [[services]]
 #This is the app service.
-hostname = "app"
-image = "ubuntu:latest"
-ports = [
-    "7090:8080"
-]
-environment = { username = "dbuser", password = "dbpassword" }
+hostname = "db"
+image = "postgres"
+ports = []
+environment = { POSTGRES_USER = "admin", POSTGRES_PASSWORD = "admin123",  PGDATA="/var/lib/postgresql/data/pgdata" }
 env_file = [
     "database",
 ]
 networks = []
 volumes = [
-    #{ kind = "bind", source = "<YOURAPP>", target = "/app"}
+    { kind = "bind", source = "/Users/jpmateo/Codes/rust/rustack-launcher/tests/testapp/data", target = "/var/lib/postgresql/data/pgdata"}
 ]
 depends_on = []
 tty = true
@@ -97,7 +111,7 @@ mount_target = "/var/db"
 name = "execism-diffie-hellman"
 url = "https://github.com/j-p-d-e-v/execism-diffie-hellman"
 branch = "master"
-clone = true
+clone = false
 
 
 [[repositories]]
@@ -106,10 +120,10 @@ mount_target = "/var/db"
 name = "rust-series"
 url = "https://github.com/j-p-d-e-v/exercism-series"
 branch = "test"
-clone = true
+clone = false
 
 [[repositories]]
 name = "sample-sdk"
 url = "https://github.com/j-p-d-e-v/exercism-nth-prime"
 branch = "master"
-clone = true
+clone = false

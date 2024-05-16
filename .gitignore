@@ -4,3 +4,4 @@ config.toml
 deploy
 services
 tests
+tests/testapp/data

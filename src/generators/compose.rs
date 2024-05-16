@@ -34,10 +34,15 @@ pub struct Service {
     pub hostname: String,
     pub image: String,
     #[serde(default)]
+    #[serde(skip_serializing_if = "is_vec_empty")]
     pub ports: Vec<String>,
     #[serde(default)]
-    pub tty: bool,
+    pub tty: bool,    
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_hashmap_empty")]
     pub environment: HashMap<String, String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_vec_empty")]
     pub env_file: Vec<String>,
     #[serde(default)]
     #[serde(skip_serializing_if = "is_vec_empty")]
@@ -47,7 +52,10 @@ pub struct Service {
     pub volumes: Vec<ServiceVolume>,
     #[serde(default)]
     #[serde(skip_serializing_if = "is_vec_empty")]
-    pub depends_on: Vec<String>,
+    pub depends_on: Vec<String>,    
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_string_empty")]
+    pub restart: String,
 }
 
 /// Struct for networks

@@ -12,5 +12,5 @@ fn main() {
     for line in lines {
         println!("{}",line.unwrap());
     }
-    println!("FInished");
+    println!("Finished");
 }
