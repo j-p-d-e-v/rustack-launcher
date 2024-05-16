@@ -45,6 +45,9 @@ pub struct Service {
     #[serde(default)]
     #[serde(skip_serializing_if = "is_service_volumes_empty")]
     pub volumes: Vec<ServiceVolume>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_vec_empty")]
+    pub depends_on: Vec<String>,
 }
 
 /// Struct for networks

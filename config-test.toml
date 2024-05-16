@@ -42,6 +42,7 @@ networks = []
 volumes = [
     #{ kind = "bind", source = "<YOURAPP>", target = "/app"}
 ]
+depends_on = []
 tty = true
 
 [[networks]]
