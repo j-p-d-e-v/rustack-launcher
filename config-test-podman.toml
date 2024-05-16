@@ -1,0 +1,92 @@
+[settings]
+name = "ruStack Launcher"
+description = "An application launcher that you might probably use."
+author = "JP"
+base_dir = "."
+deploy_dir = "deploy"
+services_dir = "services"
+compose_executable = "podman-compose"
+compose_file = "podman-compose-test.yaml"
+compose_detached = true
+
+
+[[services]]
+#This is the app service.
+hostname = "adminer"
+image = "docker.io/adminer"
+environment = {}
+env_file = []
+ports = [
+    "7082:8080"
+]
+depends_on = ["db"]
+networks = []
+tty = true
+
+[[services]]
+#This is the app service.
+hostname = "db"
+image = "docker.io/postgres"
+environment = { POSTGRES_USER = "admin", POSTGRES_PASSWORD = "admin123",  PGDATA="/var/lib/postgresql/data/pgdata" }
+env_file = [
+    "database",
+]
+tty = true
+
+[[env_files]]
+#Contains common environment variables
+name = "common"
+values = [
+    { name = "myvar1", value = "1" },
+    { name = "myvar2", value = "2" },
+    { name = "myvar3", value = "myvalue3" },
+]
+
+[[env_files]]
+#Contains database environment variables.
+name = "database"
+values = [
+    { name = "DB_USERNAME", value = "root" },
+    { name = "DB_PASSWORD", value = "thispasswordmodified" },
+    { name = "DB_HOST", value = "127.0.0.0" },
+    { name = "DB_PORT", value = "3306" },
+]
+
+[[volumes]]
+name = "testvolumes"
+driver = "nfs"
+driver_opts = [
+    { name = "type", value = "nfs" },
+    { name = "o", value = "addr=10.40.0.199,nolock,soft,rw" },
+    { name = "device", value = ":/docker/example" },
+]
+external = false
+labels = { "my.volume.label1" = "This is a volume label 1.", "my.volume.label2" = "This is a volume label 2." }
+
+[[volumes]]
+name = "testvolumesno"
+external = false
+
+
+[[repositories]]
+service = "app"
+mount_target = "/var/db"
+name = "execism-diffie-hellman"
+url = "https://github.com/j-p-d-e-v/execism-diffie-hellman"
+branch = "master"
+clone = false
+
+
+[[repositories]]
+service = "database"
+mount_target = "/var/db"
+name = "rust-series"
+url = "https://github.com/j-p-d-e-v/exercism-series"
+branch = "test"
+clone = false
+
+[[repositories]]
+name = "sample-sdk"
+url = "https://github.com/j-p-d-e-v/exercism-nth-prime"
+branch = "master"
+clone = false

@@ -194,28 +194,52 @@ impl Compose {
         f.write(&compose_file.as_bytes())?;
         Ok(file_path)
     }
-
     ///Execute the compose file.
     pub fn up(&self) -> bool {
-        let mut args: Vec<String> = Vec::from([
-            String::from("-f"),
-            self.file.clone(),
-            String::from("up")
-        ]);
-        if self.detached {
-            args.push(String::from("-d"));
+        let executable:String = self.executable.clone();
+        if "docker-compose".to_string() == executable {                
+            let mut args: Vec<String> = Vec::from([
+                String::from("-f"),
+                self.file.clone(),
+                String::from("up")
+            ]);
+            if self.detached {
+                args.push(String::from("-d"));
+            }
+            ExecuteCommand::run(String::from("docker-compose"),args);
         }
-        ExecuteCommand::run(self.executable.clone(),args);
+        else if "podman-compose".to_string() == executable {       
+            let mut args: Vec<String> = Vec::from([
+                String::from("-f"),
+                self.file.clone(),
+                String::from("up")
+            ]);
+            if self.detached {
+                args.push(String::from("-d"));
+            }
+            ExecuteCommand::run(String::from("podman-compose"),args);
+        }
         true
     }
     ///Terminates the running compose file.
     pub fn down(&self) -> bool {
-        let args: Vec<String> = Vec::from([
-            String::from("-f"),
-            self.file.clone(),
-            String::from("down")
-        ]);
-        ExecuteCommand::run(self.executable.clone(),args);
+        let executable:String = self.executable.clone();
+        if "docker-compose".to_string() == executable {                                
+            let args: Vec<String> = Vec::from([
+                String::from("-f"),
+                self.file.clone(),
+                String::from("down")
+            ]);
+            ExecuteCommand::run(String::from("docker-compose"),args);
+        }
+        else if "podman-compose".to_string() == executable {       
+            let args: Vec<String> = Vec::from([
+                String::from("-f"),
+                self.file.clone(),
+                String::from("down")
+            ]);
+            ExecuteCommand::run(String::from("podman-compose"),args);
+        }
         true
     }
 }
