@@ -7,7 +7,7 @@ edition = "2021"
 license = "Apache-2.0"
 categories = ["config"]
 authors = ["JP Mateo <jpmateo022@gmail.com>"]
-keywords = ["connfig-generator", "personal-project","study-rust","app-launcher","application launcher"]
+keywords = ["connfig-generator", "personal-project","study-rust","app-launcher","launcher"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
