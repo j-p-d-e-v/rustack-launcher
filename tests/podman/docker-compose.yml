@@ -1,0 +1,6 @@
+services:
+  adminer:
+    image: docker.io/adminer
+    restart: always
+    ports:
+      - 7082:8080

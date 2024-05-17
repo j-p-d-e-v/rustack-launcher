@@ -3,5 +3,6 @@ config.toml
 *.env
 deploy
 services
-tests
-tests/testapp/data
+./tests
+tests/testapp
+tests/command*

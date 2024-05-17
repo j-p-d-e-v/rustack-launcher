@@ -2,33 +2,12 @@
 name = "ruStack Launcher"
 description = "An application launcher that you might probably use."
 author = "JP"
-base_dir = "."
+base_dir = "D:/Codes/Lab/Rust/config-generator"
 deploy_dir = "deploy"
 services_dir = "services"
 compose_executable = "docker-compose"
 compose_file = "docker-compose-test.yaml"
 compose_detached = true
-
-[[services]]
-#This is the app service.
-hostname = "app"
-image = "django:test"
-ports = [
-    "7080:8000",
-    "7081:80"
-]
-volumes = [
-    #{ kind = "bind", source = "<YOURAPP>", target = "/app"}
-]
-environment = { mykey = "myvalue" }
-env_file = [
-    "common",
-    "database",
-]
-depends_on = ["db"]
-networks = []
-tty = true
-
 
 [[services]]
 #This is the app service.

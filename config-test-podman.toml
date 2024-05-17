@@ -2,7 +2,7 @@
 name = "ruStack Launcher"
 description = "An application launcher that you might probably use."
 author = "JP"
-base_dir = "."
+base_dir = "D:/Codes/Lab/Rust/config-generator"
 deploy_dir = "deploy"
 services_dir = "services"
 compose_executable = "podman-compose"
