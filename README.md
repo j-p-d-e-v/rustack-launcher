@@ -5,6 +5,8 @@ A Rust library for developing application launchers. It uses a single TOML confi
 NOTE: This is a personal project created for practicing Rust development. Feel free to modify this library as you see fit.
 ```
 
+Crate: https://crates.io/crates/rustack-launcher
+
 ## Configuration File
 
 The launcher takes a configuration using TOML. See [TOML](https://toml.io/en/) for the guidelines.
